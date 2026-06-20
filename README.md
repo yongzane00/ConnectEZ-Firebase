@@ -1,4 +1,4 @@
-# Firebase
+# ConnectEZ-Firebase
 
 Logging MPU6050 Accelerometer and MAX30102 Heart Rate Sensor Data from ESP32-S3 to Google Firebase
 

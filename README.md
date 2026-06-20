@@ -1,27 +1,53 @@
-# ConnectEZ-Firebase
+# ConnectEZ — Sensor-Logging Firmware (ESP32-S3 → Firebase)
 
-Logging MPU6050 Accelerometer and MAX30102 Heart Rate Sensor Data from ESP32-S3 to Google Firebase
+ESP32-S3 firmware that reads an **MPU6050** accelerometer/gyroscope and a **MAX30102** heart-rate sensor, runs on-device **fall detection**, and logs incidents to **Google Firebase Realtime Database**. This is the sensor-logging component of **ConnectEZ**, an affordable AAC (Augmentative & Alternative Communication) device for aphasia patients — the accelerometer drives fall detection and the pulse sensor enables health monitoring, with a buzzer + button for local alerting.
 
-## Description
+> Medical Device Design & Biomedical Project Design & Management · team of 8
 
-Libraries are found in the folder called 'lib' and the usage of these libraries is in 'src/main.cpp'
+## Features
 
-## Getting Started
+- Real-time fall detection from MPU6050 accelerometer + gyroscope data
+- Heart-rate sensing via MAX30102
+- Automatic logging of fall incidents (full motion data + timestamp) to Firebase RTDB
+- Local buzzer alert with a button to acknowledge / silence
+- Firebase Authentication (email/password) so each device writes under its own user UID
 
-### Dependencies
+## Hardware & wiring
 
-* VSCode
-* PlatformIO
-* esp32 (depending on which model you using, you have to change the board model in 'platformio.ini'
+| Component | Connection | ESP32-S3 GPIO |
+|-----------|------------|---------------|
+| MPU6050 (accelerometer/gyro) | I²C SDA / SCL | 8 / 9 |
+| MAX30102 (heart rate) | I²C SDA / SCL | 10 / 11 |
+| Buzzer | signal | 12 |
+| Button (ezButton) | signal | 5 |
 
-## Authors
+Board: **ESP32-S3-DevKitC-1** (change `board` in `platformio.ini` for other variants).
 
-Contributors names and contact info
+## Tech stack
 
-Yong Zane
-zaneyong00@gmail.com
+C++ · ESP32-S3 · Arduino framework · PlatformIO · Firebase Realtime Database · I²C
 
-## Version History
+## How it works
 
-* 1.0
-  * This is the complete version
+On boot, `setup()` initialises both I²C sensors, connects to WiFi, and authenticates with Firebase. In `loop()`, the MPU6050 is polled and `fallDetection()` is evaluated; on a detected fall the firmware writes a full motion record to Firebase and triggers the buzzer (the button can acknowledge it). The MAX30102 heart rate is checked each cycle.
+
+## Data schema (Firebase RTDB)
+
+Records are written to `/UsersData/{uid}/readings/{timestamp}`:
+
+```
+x_axis, y_axis, z_axis            # acceleration
+x_gyro, y_gyro, z_gyro            # angular velocity
+total_acceleration                # magnitude
+total_angular_velocity
+timestamp
+"Possible fall detected"          # fall flag
+```
+
+## Author
+
+Yong Zane · zaneyong00@gmail.com
+
+## License
+
+See [LICENSE](LICENSE).
